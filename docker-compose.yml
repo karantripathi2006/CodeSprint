@@ -1,0 +1,77 @@
+# ===============================
+# ResuMatch AI - Docker Compose
+# ===============================
+version: "3.8"
+
+services:
+  # ── FastAPI Application ──────────────────────────────────
+  app:
+    build: .
+    container_name: resumatch-app
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/resumatch
+      - REDIS_URL=redis://redis:6379/0
+      - CHROMA_PERSIST_DIR=/app/chroma_data
+      - DEBUG=true
+      - API_KEY=dev-api-key-change-in-production
+    volumes:
+      - ./uploads:/app/uploads
+      - ./chroma_data:/app/chroma_data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── Celery Worker ────────────────────────────────────────
+  celery-worker:
+    build: .
+    container_name: resumatch-celery
+    command: celery -A app.core.celery_app worker --loglevel=info --concurrency=2
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/resumatch
+      - REDIS_URL=redis://redis:6379/0
+      - CHROMA_PERSIST_DIR=/app/chroma_data
+    depends_on:
+      - app
+      - redis
+    restart: unless-stopped
+
+  # ── PostgreSQL Database ──────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: resumatch-postgres
+    environment:
+      POSTGRES_DB: resumatch
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ── Redis ────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: resumatch-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+  redis_data:

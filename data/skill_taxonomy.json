@@ -1,0 +1,167 @@
+{
+    "categories": {
+        "Programming Languages": {
+            "skills": ["Python", "JavaScript", "TypeScript", "Java", "C++", "C#", "Go", "Rust", "Ruby", "PHP", "Swift", "Kotlin", "Scala", "R", "MATLAB", "Perl", "Dart"],
+            "synonyms": {
+                "JS": "JavaScript",
+                "TS": "TypeScript",
+                "C Sharp": "C#",
+                "Golang": "Go",
+                "Python3": "Python",
+                "Python 3": "Python",
+                "CPP": "C++",
+                "Objective-C": "Swift",
+                "CoffeeScript": "JavaScript"
+            }
+        },
+        "Web Frameworks": {
+            "skills": ["React", "Angular", "Vue.js", "Next.js", "Node.js", "Express.js", "Django", "Flask", "FastAPI", "Spring Boot", "Laravel", "Rails", "Svelte", "Nuxt.js", "Gatsby"],
+            "synonyms": {
+                "React.js": "React",
+                "ReactJS": "React",
+                "React JS": "React",
+                "Angular.js": "Angular",
+                "AngularJS": "Angular",
+                "Angular 2+": "Angular",
+                "Vue": "Vue.js",
+                "VueJS": "Vue.js",
+                "Vue JS": "Vue.js",
+                "NextJS": "Next.js",
+                "Nextjs": "Next.js",
+                "Next JS": "Next.js",
+                "NodeJS": "Node.js",
+                "Node": "Node.js",
+                "Node JS": "Node.js",
+                "ExpressJS": "Express.js",
+                "Express": "Express.js",
+                "Spring": "Spring Boot",
+                "Ruby on Rails": "Rails",
+                "RoR": "Rails",
+                "SvelteKit": "Svelte"
+            }
+        },
+        "Data Science & ML": {
+            "skills": ["Machine Learning", "Deep Learning", "NLP", "Computer Vision", "Data Analysis", "Data Engineering", "MLOps", "Reinforcement Learning"],
+            "children": {
+                "Machine Learning": ["Scikit-learn", "XGBoost", "LightGBM", "CatBoost", "Feature Engineering", "Model Evaluation"],
+                "Deep Learning": ["TensorFlow", "PyTorch", "Keras", "JAX", "Neural Networks", "CNNs", "RNNs", "Transformers", "GANs"],
+                "NLP": ["spaCy", "NLTK", "Hugging Face", "LangChain", "Text Classification", "Named Entity Recognition", "Sentiment Analysis"],
+                "Computer Vision": ["OpenCV", "YOLO", "Image Classification", "Object Detection"],
+                "Data Analysis": ["Pandas", "NumPy", "Matplotlib", "Seaborn", "Jupyter", "Plotly", "Tableau", "Power BI"]
+            },
+            "synonyms": {
+                "ML": "Machine Learning",
+                "DL": "Deep Learning",
+                "Natural Language Processing": "NLP",
+                "CV": "Computer Vision",
+                "sklearn": "Scikit-learn",
+                "scikit learn": "Scikit-learn",
+                "scikit-learn": "Scikit-learn",
+                "tf": "TensorFlow",
+                "Tensor Flow": "TensorFlow",
+                "tensorflow": "TensorFlow",
+                "pytorch": "PyTorch",
+                "HuggingFace": "Hugging Face",
+                "langchain": "LangChain"
+            }
+        },
+        "Cloud & DevOps": {
+            "skills": ["AWS", "Azure", "GCP", "Docker", "Kubernetes", "Terraform", "CI/CD", "Jenkins", "GitHub Actions", "GitLab CI", "Ansible", "Pulumi"],
+            "synonyms": {
+                "Amazon Web Services": "AWS",
+                "Amazon AWS": "AWS",
+                "Google Cloud": "GCP",
+                "Google Cloud Platform": "GCP",
+                "Microsoft Azure": "Azure",
+                "K8s": "Kubernetes",
+                "k8s": "Kubernetes",
+                "CICD": "CI/CD",
+                "CI CD": "CI/CD",
+                "Continuous Integration": "CI/CD",
+                "Github Actions": "GitHub Actions",
+                "Gitlab CI": "GitLab CI"
+            }
+        },
+        "Databases": {
+            "skills": ["PostgreSQL", "MySQL", "MongoDB", "Redis", "Elasticsearch", "SQLite", "Cassandra", "DynamoDB", "Neo4j", "InfluxDB", "CockroachDB"],
+            "synonyms": {
+                "Postgres": "PostgreSQL",
+                "PG": "PostgreSQL",
+                "Mongo": "MongoDB",
+                "ES": "Elasticsearch",
+                "Elastic Search": "Elasticsearch",
+                "ElasticSearch": "Elasticsearch",
+                "Dynamo DB": "DynamoDB",
+                "AWS DynamoDB": "DynamoDB"
+            }
+        },
+        "Frontend & UI": {
+            "skills": ["HTML", "CSS", "SASS", "Tailwind CSS", "Bootstrap", "Material UI", "Webpack", "Vite", "Figma", "Responsive Design"],
+            "synonyms": {
+                "HTML5": "HTML",
+                "CSS3": "CSS",
+                "SCSS": "SASS",
+                "Less": "SASS",
+                "TailwindCSS": "Tailwind CSS",
+                "Tailwind": "Tailwind CSS",
+                "MUI": "Material UI",
+                "Material Design": "Material UI"
+            }
+        },
+        "API & Architecture": {
+            "skills": ["REST", "GraphQL", "gRPC", "Microservices", "Event-Driven Architecture", "WebSockets", "API Gateway", "Message Queues"],
+            "children": {
+                "Message Queues": ["RabbitMQ", "Apache Kafka", "AWS SQS", "Celery"]
+            },
+            "synonyms": {
+                "RESTful": "REST",
+                "REST API": "REST",
+                "RESTful API": "REST",
+                "Micro Services": "Microservices",
+                "Micro-services": "Microservices",
+                "Web Sockets": "WebSockets",
+                "Socket.io": "WebSockets"
+            }
+        },
+        "Version Control & Tools": {
+            "skills": ["Git", "GitHub", "GitLab", "Bitbucket", "Jira", "Confluence", "Linux", "Bash"],
+            "synonyms": {
+                "Github": "GitHub",
+                "Gitlab": "GitLab",
+                "Shell Scripting": "Bash",
+                "Shell": "Bash",
+                "Command Line": "Bash",
+                "Unix": "Linux"
+            }
+        },
+        "Mobile Development": {
+            "skills": ["React Native", "Flutter", "iOS Development", "Android Development", "SwiftUI", "Xamarin"],
+            "synonyms": {
+                "React native": "React Native",
+                "RN": "React Native",
+                "iOS": "iOS Development",
+                "Android": "Android Development"
+            }
+        },
+        "Security": {
+            "skills": ["OAuth", "JWT", "SSL/TLS", "Encryption", "Penetration Testing", "OWASP"],
+            "synonyms": {
+                "OAuth2": "OAuth",
+                "OAuth 2.0": "OAuth",
+                "JSON Web Token": "JWT",
+                "JSON Web Tokens": "JWT"
+            }
+        },
+        "Soft Skills": {
+            "skills": ["Leadership", "Communication", "Problem Solving", "Teamwork", "Time Management", "Agile", "Scrum", "Kanban", "Project Management", "Mentoring", "Critical Thinking"],
+            "synonyms": {
+                "Team Player": "Teamwork",
+                "Team Work": "Teamwork",
+                "PM": "Project Management",
+                "Agile Methodology": "Agile",
+                "Scrum Master": "Scrum",
+                "Problem-solving": "Problem Solving"
+            }
+        }
+    }
+}

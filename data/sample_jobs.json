@@ -1,0 +1,35 @@
+[
+    {
+        "title": "Senior Python Developer",
+        "company": "TechCorp Solutions",
+        "description": "We are looking for a Senior Python Developer to join our backend team. You will be responsible for designing and building scalable microservices, optimizing API performance, and mentoring junior developers. The ideal candidate has strong experience with Python web frameworks and cloud infrastructure.",
+        "required_skills": ["Python", "FastAPI", "PostgreSQL", "Docker", "REST", "Git"],
+        "optional_skills": ["Kubernetes", "AWS", "Redis", "CI/CD", "Elasticsearch", "Terraform"],
+        "experience_min": 4,
+        "experience_max": 8,
+        "location": "San Francisco, CA (Remote OK)",
+        "job_type": "full-time"
+    },
+    {
+        "title": "Machine Learning Engineer",
+        "company": "AI Innovations Ltd",
+        "description": "Join our ML team to build and deploy production machine learning models. You will work on NLP, recommendation systems, and computer vision projects. Strong Python skills and experience with deep learning frameworks are essential.",
+        "required_skills": ["Python", "Machine Learning", "Deep Learning", "PyTorch", "NLP", "Pandas"],
+        "optional_skills": ["TensorFlow", "AWS", "Docker", "MLOps", "Hugging Face", "Kubernetes", "Scikit-learn"],
+        "experience_min": 2,
+        "experience_max": 6,
+        "location": "New York, NY",
+        "job_type": "full-time"
+    },
+    {
+        "title": "Junior Full Stack Developer",
+        "company": "WebDev Agency",
+        "description": "We are seeking an enthusiastic Junior Full Stack Developer to help build modern web applications. You should have a good understanding of JavaScript, React, and backend development. This is a great opportunity for recent graduates to grow their skills.",
+        "required_skills": ["JavaScript", "React", "Node.js", "HTML", "CSS", "Git"],
+        "optional_skills": ["TypeScript", "MongoDB", "Docker", "REST", "Agile", "PostgreSQL"],
+        "experience_min": 0,
+        "experience_max": 2,
+        "location": "Austin, TX",
+        "job_type": "full-time"
+    }
+]

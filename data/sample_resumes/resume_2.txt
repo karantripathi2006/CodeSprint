@@ -1,0 +1,56 @@
+Sarah Chen
+sarah.chen@gmail.com | +1-555-987-6543 | New York, NY
+
+PROFESSIONAL SUMMARY
+Data Scientist with 3 years of experience in machine learning, NLP, and data analysis.
+Skilled in building predictive models and deploying ML pipelines at scale.
+
+EXPERIENCE
+
+Data Scientist | DataDriven Analytics
+March 2022 - Present
+• Built NLP models for sentiment analysis achieving 92% accuracy using Hugging Face transformers
+• Developed recommendation engine using collaborative filtering and deep learning with PyTorch
+• Created interactive dashboards with Plotly and Streamlit for stakeholder reporting
+• Managed data pipelines using Apache Airflow and AWS S3
+
+ML Engineer Intern | AI Research Labs
+June 2021 - February 2022
+• Implemented computer vision models for object detection using YOLO and OpenCV
+• Fine-tuned BERT models for text classification tasks
+• Built feature engineering pipelines with Pandas and scikit-learn
+• Conducted A/B testing and statistical analysis using Python
+
+EDUCATION
+
+Master of Science in Data Science
+Columbia University, 2021
+GPA: 3.9/4.0
+
+Bachelor of Science in Mathematics
+UC Berkeley, 2019
+GPA: 3.7/4.0
+
+TECHNICAL SKILLS
+Languages: Python, R, SQL, Julia
+ML/DL: TensorFlow, PyTorch, Scikit-learn, Keras, XGBoost, LightGBM
+NLP: spaCy, NLTK, Hugging Face Transformers, LangChain
+Data: Pandas, NumPy, Matplotlib, Seaborn, Plotly, Jupyter
+Cloud: AWS (SageMaker, S3, Lambda), GCP (BigQuery), Docker
+Databases: PostgreSQL, MongoDB, Redis
+Tools: Git, MLflow, Apache Airflow, Streamlit
+
+PROJECTS
+
+Customer Churn Prediction
+• Built end-to-end ML pipeline predicting customer churn with 89% accuracy
+• Used XGBoost, feature engineering, and SHAP for model interpretability
+
+Conversational AI Chatbot
+• Developed multi-turn chatbot using LangChain and GPT-4 API
+• Implemented RAG (Retrieval Augmented Generation) with ChromaDB
+
+CERTIFICATIONS
+AWS Machine Learning Specialty
+Google TensorFlow Developer Certificate
+Deep Learning Specialization (Coursera)

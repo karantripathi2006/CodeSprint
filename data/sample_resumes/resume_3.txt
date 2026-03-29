@@ -1,0 +1,57 @@
+Michael Rodriguez
+michael.r@outlook.com | +1-555-456-7890 | Austin, TX
+
+ABOUT ME
+Recent Computer Science graduate seeking entry-level software engineering position.
+Strong foundation in algorithms, data structures, and web development.
+
+EDUCATION
+
+Bachelor of Science in Computer Science
+University of Texas at Austin, 2024
+GPA: 3.5/4.0
+Relevant Coursework: Data Structures, Algorithms, Database Systems, Operating Systems, Web Development
+
+INTERNSHIP EXPERIENCE
+
+Software Engineering Intern | TechStartup Inc.
+May 2023 - August 2023
+• Developed React components for customer-facing dashboard
+• Built REST APIs using Node.js and Express.js
+• Wrote unit tests with Jest achieving 85% code coverage
+• Participated in daily standups and sprint planning
+
+Research Assistant | UT Austin CS Department
+January 2023 - May 2023
+• Assisted in NLP research project on text summarization
+• Implemented baseline models using Python and PyTorch
+• Analyzed experimental results and co-authored research paper
+
+PROJECTS
+
+TaskFlow - Project Management App
+• Full-stack web application built with React, Node.js, and MongoDB
+• Features: task boards, drag-and-drop, real-time updates with WebSockets
+• Deployed on Heroku with CI/CD pipeline
+
+Weather Analytics Dashboard
+• Data visualization app using Python, Flask, and Chart.js
+• Fetched weather data from APIs and displayed interactive charts
+• Used pandas for data processing and SQLite for storage
+
+Algorithm Visualizer
+• Interactive web app to visualize sorting and graph algorithms
+• Built with vanilla JavaScript, HTML, and CSS
+• 200+ GitHub stars
+
+TECHNICAL SKILLS
+Languages: Python, JavaScript, Java, C, SQL
+Web: React, Node.js, Express.js, HTML, CSS, Flask
+Databases: MySQL, MongoDB, SQLite
+Tools: Git, GitHub, VS Code, Linux, Docker
+Other: Data Structures, Algorithms, REST APIs, Agile
+
+ACTIVITIES
+• Google Developer Student Club - Technical Lead
+• HackTX 2023 - 2nd Place Winner
+• Open Source Contributor - 50+ contributions on GitHub

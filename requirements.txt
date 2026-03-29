@@ -1,0 +1,43 @@
+# FastAPI & Server
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+
+# Database
+sqlalchemy==2.0.23
+psycopg2-binary==2.9.9
+alembic==1.13.0
+
+# Redis & Celery
+redis==5.0.1
+celery==5.3.6
+
+# Vector Database
+chromadb==0.4.22
+
+# ML & NLP
+sentence-transformers==2.2.2
+torch==2.1.2
+transformers==4.36.2
+
+# Resume Parsing
+PyMuPDF==1.23.8
+pdfplumber==0.10.3
+python-docx==1.1.0
+
+# LangChain
+langchain==0.0.350
+langchain-community==0.0.6
+
+# API Utilities
+slowapi==0.1.9
+pydantic==2.5.3
+pydantic-settings==2.1.0
+python-dotenv==1.0.0
+
+# Logging & Monitoring
+structlog==23.2.0
+
+# Utilities
+uuid6==2023.5.2
+aiofiles==23.2.1

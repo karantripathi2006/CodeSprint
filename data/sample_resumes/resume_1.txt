@@ -1,0 +1,59 @@
+John Doe
+johndoe@email.com | +1-555-123-4567 | San Francisco, CA
+linkedin.com/in/johndoe
+
+SUMMARY
+Experienced Full Stack Developer with 5+ years of experience building scalable web applications.
+Passionate about clean code, microservices architecture, and cloud-native development.
+
+WORK EXPERIENCE
+
+Senior Software Engineer | TechCorp Inc.
+January 2022 - Present
+• Led development of microservices architecture serving 10M+ users
+• Built RESTful APIs using Python, FastAPI, and PostgreSQL
+• Implemented CI/CD pipelines with GitHub Actions and Docker
+• Mentored team of 4 junior developers and conducted code reviews
+• Reduced API response time by 40% through Redis caching and query optimization
+
+Software Engineer | StartupXYZ
+June 2019 - December 2021
+• Developed full-stack web applications using React, Node.js, and MongoDB
+• Built real-time notification system using WebSockets and Redis
+• Designed and implemented user authentication with OAuth 2.0 and JWT
+• Collaborated with product team in Agile/Scrum environment
+• Deployed applications on AWS (EC2, S3, RDS, Lambda)
+
+Junior Developer | WebAgency Co.
+January 2018 - May 2019
+• Built responsive websites using HTML, CSS, JavaScript, and React
+• Developed REST APIs with Express.js and MySQL
+• Participated in code reviews and pair programming sessions
+
+EDUCATION
+
+Bachelor of Science in Computer Science
+Stanford University, 2017
+GPA: 3.8/4.0
+
+SKILLS
+Programming Languages: Python, JavaScript, TypeScript, Java, SQL
+Frameworks: React, Node.js, FastAPI, Express.js, Django
+Cloud & DevOps: AWS, Docker, Kubernetes, CI/CD, GitHub Actions, Terraform
+Databases: PostgreSQL, MongoDB, Redis, Elasticsearch
+Tools: Git, Jira, Linux, Agile, Scrum
+
+PROJECTS
+
+ResuMatch AI - Resume Matching Platform
+• Built multi-agent AI system for parsing resumes and matching with job descriptions
+• Used sentence-transformers for semantic similarity and Python for backend
+
+E-Commerce Microservices
+• Designed event-driven architecture with 12 microservices
+• Technologies: Python, FastAPI, RabbitMQ, Docker, Kubernetes
+
+CERTIFICATIONS
+AWS Solutions Architect Associate
+Google Cloud Professional Data Engineer
+Certified Kubernetes Administrator (CKA)
