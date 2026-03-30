@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { UploadCloud, FileText, CheckCircle2, RotateCcw, X, Brain } from 'lucide-react';
 import { useState, useCallback } from 'react';
 import ParseLoader from '../components/ui/ParseLoader';
+import { useCandidates } from '../context/CandidateContext';
 
 export default function ParseResume() {
   const [isHovered, setIsHovered] = useState(false);
@@ -11,6 +12,9 @@ export default function ParseResume() {
 
   const [parsedData, setParsedData] = useState<any>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [cvData, setCvData] = useState<string | null>(null);
+
+  const { addCandidate } = useCandidates();
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -26,14 +30,28 @@ export default function ParseResume() {
     e.preventDefault();
     setIsHovered(false);
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      setFile(e.dataTransfer.files[0]);
+      const selectedFile = e.dataTransfer.files[0];
+      setFile(selectedFile);
+      readCvData(selectedFile);
     }
   }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
+      const selectedFile = e.target.files[0];
+      setFile(selectedFile);
+      readCvData(selectedFile);
     }
+  };
+
+  const readCvData = (f: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (e.target?.result && typeof e.target.result === 'string') {
+        setCvData(e.target.result);
+      }
+    };
+    reader.readAsDataURL(f);
   };
 
   const handleParse = async () => {
@@ -102,14 +120,27 @@ export default function ParseResume() {
 
   const resetState = () => {
     setFile(null);
+    setCvData(null);
     setIsComplete(false);
     setParsedData(null);
     setErrorMsg(null);
   };
 
   const handleSaveCandidate = () => {
-    alert("Candidate saved to database successfully!");
-    resetState();
+    if (parsedData?.parsed_data) {
+      addCandidate({
+        name: parsedData.parsed_data.name || "Unknown",
+        email: parsedData.parsed_data.email || "No email",
+        role: "Pending Candidate",
+        score: Math.floor(Math.random() * 20) + 70, // 70-90 score randomly
+        status: "New",
+        skills: parsedData.normalized_skills?.normalized_skills || parsedData.parsed_data.skills || [],
+        cvFileName: file?.name,
+        cvData: cvData || undefined,
+      });
+      alert("Candidate saved to database successfully!");
+      resetState();
+    }
   };
 
   return (

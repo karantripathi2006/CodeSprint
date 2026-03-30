@@ -69,3 +69,8 @@
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
 }
+
+@keyframes gridMove {
+  0% { transform: perspective(1000px) rotateX(60deg) translateY(0); }
+  100% { transform: perspective(1000px) rotateX(60deg) translateY(40px); }
+}

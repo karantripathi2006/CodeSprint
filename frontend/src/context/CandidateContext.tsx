@@ -8,6 +8,8 @@ export interface Candidate {
   score: number;
   status: string;
   skills: string[];
+  cvFileName?: string;
+  cvData?: string;
 }
 
 interface CandidateContextType {

@@ -1,6 +1,9 @@
-import { motion } from 'framer-motion';
-import { Mail, FileText, Bot } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Mail, FileText, Bot, X } from 'lucide-react';
+import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import SkillRadarChart from './SkillRadarChart';
+import { useCandidates } from '../../context/CandidateContext';
 
 interface MatchData {
   candidateName: string;
@@ -19,6 +22,12 @@ interface MatchData {
 }
 
 export default function MatchCard({ match }: { match: MatchData }) {
+  const [showAIInsights, setShowAIInsights] = useState(false);
+  const { candidates } = useCandidates();
+  
+  // Find original candidate to access CV if exists
+  const candidate = candidates.find(c => c.name === match.candidateName);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -105,13 +114,35 @@ export default function MatchCard({ match }: { match: MatchData }) {
           </div>
           
           <div className="flex gap-3 mt-6 pt-6 border-t border-[#2a3050]">
-            <button className="flex-1 flex justify-center items-center gap-2 py-2 px-4 rounded-xl text-sm font-medium text-white bg-[#2a3050] hover:bg-[#32395b] transition-colors">
-              <FileText size={16} /> View Resume
-            </button>
-            <button className="flex-1 flex justify-center items-center gap-2 py-2 px-4 rounded-xl text-sm font-medium text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 hover:bg-indigo-500/20 transition-colors">
+            {candidate?.cvData && candidate?.cvFileName ? (
+              <a 
+                href={candidate.cvData} 
+                download={candidate.cvFileName}
+                className="flex-1 flex justify-center items-center gap-2 py-2 px-4 rounded-xl text-sm font-medium text-white bg-[#2a3050] hover:bg-[#32395b] transition-colors"
+                title={`Download ${candidate.cvFileName}`}
+              >
+                <FileText size={16} /> View Resume
+              </a>
+            ) : (
+              <button 
+                disabled
+                title="No CV attached"
+                className="flex-1 flex justify-center items-center gap-2 py-2 px-4 rounded-xl text-sm font-medium text-slate-400 bg-[#1a1f35] border border-[#2a3050] opacity-50 cursor-not-allowed"
+              >
+                <FileText size={16} /> No Resume
+              </button>
+            )}
+            
+            <button 
+              onClick={() => setShowAIInsights(true)}
+              className="flex-1 flex justify-center items-center gap-2 py-2 px-4 rounded-xl text-sm font-medium text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 hover:bg-indigo-500/20 transition-colors"
+            >
               <Bot size={16} /> Ask AI
             </button>
-            <button className="flex justify-center items-center p-2 rounded-xl text-slate-400 bg-[#1a1f35] border border-[#2a3050] hover:text-white hover:bg-[#2a3050] transition-colors">
+            <button 
+              className="flex justify-center items-center p-2 rounded-xl text-slate-400 bg-[#1a1f35] border border-[#2a3050] hover:text-white hover:bg-[#2a3050] transition-colors" 
+              title="Mail Candidate"
+            >
               <Mail size={16} />
             </button>
           </div>
@@ -129,6 +160,80 @@ export default function MatchCard({ match }: { match: MatchData }) {
           </div>
         </div>
       </div>
+
+      {/* AI Insights Modal */}
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {showAIInsights && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowAIInsights(false)}
+              className="absolute inset-0 bg-[#0f1525]/80 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="relative w-full max-w-lg bg-[#0f1525] border border-[#2a3050] rounded-2xl p-6 shadow-2xl z-10"
+            >
+              <button 
+                onClick={() => setShowAIInsights(false)}
+                className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors p-2"
+              >
+                <X size={20} />
+              </button>
+              
+              <div className="flex items-center gap-3 mb-6">
+                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-500/20 text-indigo-400">
+                   <Bot size={24} />
+                 </div>
+                 <div>
+                   <h2 className="text-xl font-bold text-white">AI Candidate Insights</h2>
+                   <p className="text-sm text-slate-400">Analysis for {match.candidateName}</p>
+                 </div>
+              </div>
+
+              <div className="space-y-4 text-sm text-slate-300 leading-relaxed">
+                 <div className="p-4 bg-[#1a1f35] rounded-xl border border-[#2a3050]">
+                   <p>
+                     <strong className="text-white">Summary:</strong> {match.candidateName} shows strong foundational alignment for the <span className="text-indigo-300 font-medium">{match.role}</span> role with an overall match score of {match.score}%.
+                   </p>
+                 </div>
+                 
+                 {match.skills.missing.length > 0 && (
+                   <div className="p-4 bg-red-500/5 rounded-xl border border-red-500/20">
+                     <p>
+                       <strong className="text-red-400">Attention Area:</strong> The candidate lacks explicit experience with <span className="font-medium text-slate-200">{match.skills.missing.join(", ")}</span>. Consider probing how they plan to bridge this gap during the interview.
+                     </p>
+                   </div>
+                 )}
+
+                 {match.skills.inferred.length > 0 && (
+                   <div className="p-4 bg-orange-500/5 rounded-xl border border-orange-500/20">
+                     <p>
+                       <strong className="text-orange-400">Hidden Potential:</strong> My semantic vectors infer they likely possess <span className="font-medium text-slate-200">{match.skills.inferred.join(", ")}</span> based on adjacent skills in their profile.
+                     </p>
+                   </div>
+                 )}
+
+                 <div className="mt-4 p-4 bg-indigo-500/10 rounded-xl border border-indigo-500/20">
+                    <p className="font-bold text-indigo-400 mb-2 flex flex-col gap-1">
+                      <SparklesIcon size={14} /> Suggested Interview Question
+                    </p>
+                    <p className="italic text-slate-300 text-sm">
+                      "Could you walk me through a complex problem you solved using <span className="text-white font-medium">{match.skills.matched[0] || 'your core skills'}</span>, and describe how you structured your approach to deliver the solution?"
+                    </p>
+                 </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+        </AnimatePresence>,
+        document.body
+      )}
     </motion.div>
   );
 }

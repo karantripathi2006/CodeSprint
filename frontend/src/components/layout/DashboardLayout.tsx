@@ -3,6 +3,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FileUp, Users, Target, LogOut, Menu, X, Brain } from 'lucide-react';
 import AssistantChatbot from '../chatbot/AssistantChatbot';
+import AnimatedBackground from '../ui/AnimatedBackground';
 
 export default function DashboardLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -19,7 +20,8 @@ export default function DashboardLayout() {
   ];
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[color:var(--bg-primary)]">
+    <div className="flex h-screen overflow-hidden bg-[color:var(--bg-primary)] text-white">
+      <AnimatedBackground />
       {/* Mobile Sidebar Overlay */}
       <AnimatePresence>
         {isSidebarOpen && (

@@ -1,23 +1,17 @@
-import { motion } from 'framer-motion';
-import { Search, Filter, Mail, ExternalLink, User, Trash2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Search, Filter, Mail, ExternalLink, User, Trash2, X, Download, FileText } from 'lucide-react';
 import { useState } from 'react';
-
-const initialCandidates = [
-  { id: 1, name: 'Alice Chen', role: 'Frontend Developer', score: 92, status: 'Shortlisted', skills: ['React', 'TypeScript', 'Tailwind'] },
-  { id: 2, name: 'Bob Smith', role: 'Backend Engineer', score: 85, status: 'In Review', skills: ['Node.js', 'Python', 'PostgreSQL'] },
-  { id: 3, name: 'Charlie Davis', role: 'Full Stack', score: 78, status: 'New', skills: ['Vue', 'Ruby', 'MongoDB'] },
-  { id: 4, name: 'Diana Prince', role: 'React Developer', score: 95, status: 'Interviewing', skills: ['React', 'Next.js', 'Framer'] },
-  { id: 5, name: 'Evan Wright', role: 'UI/UX Designer', score: 65, status: 'Rejected', skills: ['Figma', 'CSS', 'HTML'] },
-];
+import { useCandidates, type Candidate } from '../context/CandidateContext';
 
 export default function Candidates() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [candidates, setCandidates] = useState(initialCandidates);
+  const { candidates, deleteCandidate } = useCandidates();
+  const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     // In a real app, this would hit the backend: authFetch(`/candidates/${id}`, { method: 'DELETE' })
     if (confirm("Are you sure you want to delete this candidate?")) {
-      setCandidates(prev => prev.filter(c => c.id !== id));
+      deleteCandidate(id);
     }
   };
 
@@ -83,7 +77,7 @@ export default function Candidates() {
                       </div>
                       <div>
                         <div className="font-semibold text-white">{candidate.name}</div>
-                        <div className="text-xs text-slate-400">ID: {candidate.id.toString().padStart(4, '0')}</div>
+                        <div className="text-xs text-slate-400">ID: {candidate.id.substring(0, 4).toUpperCase()}</div>
                       </div>
                     </div>
                   </td>
@@ -121,7 +115,13 @@ export default function Candidates() {
                   <td className="px-6 py-4 text-right">
                     <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button className="p-1.5 rounded-lg bg-[#1a1f35] text-slate-400 hover:text-white hover:bg-[#2a3050] transition-colors" title="Send Email"><Mail size={16} /></button>
-                      <button className="p-1.5 rounded-lg bg-[#1a1f35] text-slate-400 hover:text-white hover:bg-[#2a3050] transition-colors" title="View Profile"><ExternalLink size={16} /></button>
+                      <button 
+                        onClick={() => setSelectedCandidate(candidate)}
+                        className="p-1.5 rounded-lg bg-[#1a1f35] text-slate-400 hover:text-white hover:bg-[#2a3050] transition-colors" 
+                        title="View Profile"
+                      >
+                        <ExternalLink size={16} />
+                      </button>
                       <button 
                         onClick={() => handleDelete(candidate.id)}
                         className="p-1.5 rounded-lg bg-[#1a1f35] text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors" 
@@ -145,6 +145,93 @@ export default function Candidates() {
           </table>
         </div>
       </div>
+
+      {/* Profile Modal */}
+      <AnimatePresence>
+        {selectedCandidate && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedCandidate(null)}
+              className="absolute inset-0 bg-[#0f1525]/80 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="relative w-full max-w-2xl bg-[#0f1525] border border-[#2a3050] rounded-2xl p-6 shadow-2xl z-10"
+            >
+              <button 
+                onClick={() => setSelectedCandidate(null)}
+                className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors p-2"
+              >
+                <X size={20} />
+              </button>
+              
+              <div className="space-y-6">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-primary text-white text-2xl font-bold shadow-lg shadow-indigo-500/20">
+                    {selectedCandidate.name.charAt(0)}
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">{selectedCandidate.name}</h2>
+                    <p className="text-sm text-slate-400">{selectedCandidate.email} • {selectedCandidate.role}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                   <div className="bg-[#1a1f35] p-4 rounded-xl border border-[#2a3050]">
+                      <h3 className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">Match Score</h3>
+                      <div className="text-2xl font-bold text-white">{selectedCandidate.score}%</div>
+                   </div>
+                   <div className="bg-[#1a1f35] p-4 rounded-xl border border-[#2a3050]">
+                      <h3 className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">Status</h3>
+                      <div className="text-sm font-medium text-indigo-400 mt-1">{selectedCandidate.status}</div>
+                   </div>
+                </div>
+
+                <div>
+                   <h3 className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">Skills</h3>
+                   <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto custom-scrollbar pr-2">
+                       {selectedCandidate.skills.map(skill => (
+                         <span key={skill} className="px-2.5 py-1 rounded bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-sm font-medium">
+                           {skill}
+                         </span>
+                       ))}
+                   </div>
+                </div>
+
+                {selectedCandidate.cvFileName && selectedCandidate.cvData && (
+                   <div>
+                       <h3 className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">Attached Document</h3>
+                       <div className="flex items-center justify-between p-4 bg-[#1a1f35] border border-[#2a3050] rounded-xl">
+                          <div className="flex items-center gap-3 overflow-hidden">
+                             <FileText className="text-emerald-400 flex-shrink-0" size={24} />
+                             <span className="text-sm text-slate-300 truncate">{selectedCandidate.cvFileName}</span>
+                          </div>
+                          <a 
+                            href={selectedCandidate.cvData} 
+                            download={selectedCandidate.cvFileName}
+                            className="flex items-center gap-2 px-4 py-2 bg-[#2a3050] hover:bg-[#343b5e] text-white text-sm font-medium rounded-lg transition-colors flex-shrink-0"
+                          >
+                             <Download size={16} />
+                             Download CV
+                          </a>
+                       </div>
+                   </div>
+                )}
+                {(!selectedCandidate.cvFileName || !selectedCandidate.cvData) && (
+                   <div className="text-slate-500 text-sm italic">
+                     No CV attached for this candidate.
+                   </div>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
