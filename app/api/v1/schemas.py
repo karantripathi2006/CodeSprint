@@ -234,6 +234,8 @@ class ChatMessage(BaseModel):
 class ChatResponse(BaseModel):
     reply: str
     sources: List[str] = []
+    mode: str = "assistant"
+    provider: str = "rules"
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

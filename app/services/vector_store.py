@@ -5,6 +5,8 @@ Stores candidate profiles in ChromaDB via LangChain for semantic search.
 Falls back to a simple hash-based embedding when sentence-transformers is unavailable.
 """
 
+from dataclasses import dataclass
+import math
 import logging
 import hashlib
 from typing import List, Dict, Any, Optional
@@ -35,6 +37,62 @@ class _HashEmbeddings:
             vec[h % self.DIM] += 1.0 / (i + 1)
         mag = sum(x * x for x in vec) ** 0.5
         return [x / (mag or 1.0) for x in vec]
+
+
+@dataclass
+class _MemoryDocument:
+    """Minimal document container for the in-memory vector store."""
+    page_content: str
+    metadata: Dict[str, Any]
+
+
+class _SimpleMemoryStore:
+    """
+    Lightweight in-memory vector store used when Chroma is unavailable.
+    Keeps enough of the Chroma interface for this app's indexing and search flow.
+    """
+
+    def __init__(self, embedding_function):
+        self.embedding_function = embedding_function
+        self._docs: Dict[str, _MemoryDocument] = {}
+        self._vectors: Dict[str, List[float]] = {}
+
+    def add_documents(self, documents: List[Any], ids: List[str]):
+        texts = [doc.page_content for doc in documents]
+        vectors = self.embedding_function.embed_documents(texts)
+        for doc_id, doc, vector in zip(ids, documents, vectors):
+            self._docs[doc_id] = _MemoryDocument(
+                page_content=doc.page_content,
+                metadata=dict(getattr(doc, "metadata", {}) or {}),
+            )
+            self._vectors[doc_id] = vector
+
+    def delete(self, ids: List[str]):
+        for doc_id in ids:
+            self._docs.pop(doc_id, None)
+            self._vectors.pop(doc_id, None)
+
+    def similarity_search_with_relevance_scores(self, query: str, k: int = 5):
+        query_vector = self.embedding_function.embed_query(query)
+        scored = []
+
+        for doc_id, doc in self._docs.items():
+            score = self._cosine_similarity(query_vector, self._vectors.get(doc_id, []))
+            scored.append((doc, score))
+
+        scored.sort(key=lambda item: item[1], reverse=True)
+        return scored[:k]
+
+    def _cosine_similarity(self, left: List[float], right: List[float]) -> float:
+        if not left or not right:
+            return 0.0
+
+        dot = sum(a * b for a, b in zip(left, right))
+        left_norm = math.sqrt(sum(a * a for a in left))
+        right_norm = math.sqrt(sum(b * b for b in right))
+        if not left_norm or not right_norm:
+            return 0.0
+        return dot / (left_norm * right_norm)
 
 
 def _get_embeddings():
@@ -77,12 +135,8 @@ def _get_store():
     except Exception as e:
         logger.warning(f"ChromaDB persistent store unavailable ({e}), trying in-memory")
         try:
-            from langchain_chroma import Chroma
-            _store_instance = Chroma(
-                collection_name="candidates",
-                embedding_function=_get_embeddings(),
-            )
-            logger.info("ChromaDB running in-memory")
+            _store_instance = _SimpleMemoryStore(embedding_function=_get_embeddings())
+            logger.info("Using simple in-memory vector store fallback")
         except Exception as e2:
             logger.error(f"Could not initialise any vector store: {e2}")
             _store_instance = None
