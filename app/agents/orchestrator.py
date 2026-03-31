@@ -116,6 +116,27 @@ class AgentOrchestrator:
                      f"(status={result['status']})")
         return result
 
+    def index_to_vector_store(
+        self,
+        candidate_id: int,
+        parsed_data: Dict[str, Any],
+        normalized_skills: Dict[str, Any],
+    ) -> bool:
+        """
+        Index a parsed candidate profile into the LangChain vector store.
+        Called from parse.py after the candidate is saved to the SQL DB.
+        Non-blocking — failures are logged but don't affect the API response.
+        """
+        try:
+            from app.services.vector_store import index_candidate
+            ok = index_candidate(candidate_id, parsed_data, normalized_skills)
+            if ok:
+                logger.info(f"[VectorStore] Candidate {candidate_id} indexed successfully")
+            return ok
+        except Exception as e:
+            logger.warning(f"[VectorStore] Indexing failed for candidate {candidate_id}: {e}")
+            return False
+
     def match_candidate(self, candidate_profile: Dict[str, Any],
                         job_description: Dict[str, Any]) -> Dict[str, Any]:
         """

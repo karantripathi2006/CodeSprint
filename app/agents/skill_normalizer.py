@@ -218,11 +218,13 @@ class SkillNormalizerAgent:
             if variant in self.synonym_map:
                 return self.synonym_map[variant], True
 
-        # Check if the skill contains a known skill as a substring
+        # Word-boundary substring match — skip very short known skills (e.g. "R", "Go")
+        # to prevent "R" matching "React", "Go" matching "Django", etc.
         for known_lower, canonical in self.synonym_map.items():
-            if known_lower in lower or lower in known_lower:
-                if abs(len(known_lower) - len(lower)) < 5:  # Don't match too-different lengths
-                    return canonical, True
+            if len(known_lower) <= 3:
+                continue
+            if re.search(r'\b' + re.escape(known_lower) + r'\b', lower):
+                return canonical, True
 
         return cleaned, False
 

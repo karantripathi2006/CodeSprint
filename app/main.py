@@ -101,6 +101,9 @@ from app.api.v1.match import router as match_router
 from app.api.v1.skills import router as skills_router
 from app.api.v1.auth import router as auth_router
 from app.api.v1.resume import router as resume_router
+from app.api.v1.jobs import router as jobs_router
+from app.api.v1.task_status import router as tasks_router
+from app.api.v1.chat import router as chat_router
 
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(resume_router, prefix="/api/v1")
@@ -108,6 +111,9 @@ app.include_router(parse_router, prefix="/api/v1")
 app.include_router(candidates_router, prefix="/api/v1")
 app.include_router(match_router, prefix="/api/v1")
 app.include_router(skills_router, prefix="/api/v1")
+app.include_router(jobs_router, prefix="/api/v1")
+app.include_router(tasks_router, prefix="/api/v1")
+app.include_router(chat_router, prefix="/api/v1")
 
 # ── Serve Frontend Static Files ─────────────────────────────────────────────
 frontend_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend")

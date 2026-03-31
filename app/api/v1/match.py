@@ -15,6 +15,7 @@ from app.models.resume import Resume
 from app.models.job import Job
 from app.models.match_result import MatchResult
 from app.agents.orchestrator import AgentOrchestrator
+from app.agents.skill_normalizer import SkillNormalizerAgent
 from app.api.v1.schemas import MatchRequest, MatchResponse, MatchListResponse
 
 logger = logging.getLogger(__name__)
@@ -67,7 +68,6 @@ async def match_all_candidates(
             continue
             
         parsed = resume.parsed_data
-        from app.agents.skill_normalizer import SkillNormalizerAgent
         normalizer = SkillNormalizerAgent()
         normalized = normalizer.normalize(parsed.get("skills", []), parsed.get("experience", []))
         
@@ -135,6 +135,12 @@ async def match_all_candidates(
         total_evaluated=len(candidates)
     )
 
+@router.post(
+    "/candidate",
+    response_model=MatchResponse,
+    summary="Match a single candidate against a job",
+    description="Match a specific candidate (by ID or inline profile) against a job description.",
+)
 async def match_candidate_job(
     request: MatchRequest,
     db: Session = Depends(get_db),
@@ -170,7 +176,6 @@ async def match_candidate_job(
 
         parsed = resume.parsed_data
         # Re-normalize skills
-        from app.agents.skill_normalizer import SkillNormalizerAgent
         normalizer = SkillNormalizerAgent()
         normalized = normalizer.normalize(parsed.get("skills", []), parsed.get("experience", []))
 
@@ -189,7 +194,6 @@ async def match_candidate_job(
         # Ensure skills are in the right format
         skills = candidate_profile.get("skills", [])
         if isinstance(skills, list):
-            from app.agents.skill_normalizer import SkillNormalizerAgent
             normalizer = SkillNormalizerAgent()
             normalized = normalizer.normalize(skills)
             candidate_profile["skills"] = normalized

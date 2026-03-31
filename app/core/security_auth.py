@@ -18,7 +18,7 @@ from app.models.user import User
 # Settings config
 SECRET_KEY = os.getenv("JWT_SECRET_KEY", "dev-super-secret-key-change-in-prod-v1")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 15  # 15 days
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 

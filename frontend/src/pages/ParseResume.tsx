@@ -3,6 +3,7 @@ import { UploadCloud, FileText, CheckCircle2, RotateCcw, X, Brain } from 'lucide
 import { useState, useCallback } from 'react';
 import ParseLoader from '../components/ui/ParseLoader';
 import { useCandidates } from '../context/CandidateContext';
+import { authFetch } from '../utils/api';
 
 export default function ParseResume() {
   const [isHovered, setIsHovered] = useState(false);
@@ -64,18 +65,14 @@ export default function ParseResume() {
     formData.append('file', file);
 
     try {
-      // Attempt to hit the actual Python backend
-      const response = await fetch('http://127.0.0.1:8000/api/v1/parse', {
+      const response = await authFetch('/parse', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('access_token') || 'test-token'}`,
-          'X-API-Key': 'dev-api-key-change-in-production'
-        },
         body: formData,
       });
 
       if (!response.ok) {
-        throw new Error(`Backend error: ${response.statusText}`);
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.detail || `Backend error: ${response.statusText}`);
       }
 
       const data = await response.json();

@@ -4,7 +4,7 @@ Run this to create all tables and seed the skill taxonomy.
 
 Usage: python init_db.py
 """
-
+#DATABASE_URL=postgresql://postgres:postgres@postgres:5432/resumatch
 import sys
 import os
 import json
@@ -101,6 +101,24 @@ def main():
         db.close()
     except Exception as e:
         logger.error(f"❌ Error seeding jobs: {e}")
+
+    # Seed default admin user
+    try:
+        from app.models.user import User
+        from app.core.security_auth import get_password_hash
+        db = SessionLocal()
+
+        if not db.query(User).filter(User.username == "admin").first():
+            admin = User(username="admin", hashed_password=get_password_hash("password"))
+            db.add(admin)
+            db.commit()
+            logger.info("✅ Default admin user created (username: admin / password: password)")
+        else:
+            logger.info("ℹ️  Admin user already exists, skipping")
+
+        db.close()
+    except Exception as e:
+        logger.error(f"❌ Error seeding admin user: {e}")
 
     logger.info("🎉 Database initialization complete!")
 

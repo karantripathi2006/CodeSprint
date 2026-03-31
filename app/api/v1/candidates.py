@@ -5,6 +5,7 @@ GET /api/v1/candidates/{id}/skills — Get normalized skills for a candidate
 
 import logging
 from fastapi import APIRouter, Depends, HTTPException, status
+import os
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -77,7 +78,14 @@ def delete_candidate(
                     
     db.delete(candidate)
     db.commit()
-    
+
+    # Remove from vector store (best-effort)
+    try:
+        from app.services.vector_store import delete_candidate as vs_delete
+        vs_delete(candidate_id)
+    except Exception as e:
+        logger.warning(f"Vector store delete skipped for candidate {candidate_id}: {e}")
+
     return None
 
 @router.get(

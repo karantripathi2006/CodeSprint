@@ -121,34 +121,48 @@ async def parse_resume(
     candidate_id = None
     try:
         parsed = result.get("parsed_data", {})
-        candidate = Candidate(
-            name=parsed.get("name", ""),
-            email=parsed.get("email", ""),
-            phone=parsed.get("phone", ""),
-            location=parsed.get("location", ""),
-            summary=parsed.get("summary", ""),
-            raw_resume_text=parsed.get("raw_text", "")[:10000],  # Limit stored text
-        )
-        # db.add(candidate)
-        # db.flush()
+        email = parsed.get("email", "") or ""
 
-        # resume_record = Resume(
-        #     candidate_id=candidate.id,
-        #     filename=unique_filename,
-        #     file_type=ext,
-        #     file_size=len(content),
-        #     parsed_data=parsed,
-        #     status=result.get("status", "completed"),
-        #     processing_time_ms=result.get("metadata", {}).get("total_time_ms", 0),
-        # )
-        # db.add(resume_record)
-        # db.commit()
-        # candidate_id = candidate.id
-        candidate_id = None # Do not save to database during parsing
-        logger.info(f"Parsed candidate {parsed.get('name', 'Unknown')} (Not saved to DB per request)")
+        # Upsert by email to avoid duplicate candidates
+        candidate = db.query(Candidate).filter(Candidate.email == email).first() if email else None
+        if candidate:
+            candidate.name = parsed.get("name", candidate.name)
+            candidate.phone = parsed.get("phone", candidate.phone)
+            candidate.location = parsed.get("location", candidate.location)
+            candidate.summary = parsed.get("summary", candidate.summary)
+            candidate.raw_resume_text = parsed.get("raw_text", "")[:10000]
+        else:
+            candidate = Candidate(
+                name=parsed.get("name", ""),
+                email=email,
+                phone=parsed.get("phone", ""),
+                location=parsed.get("location", ""),
+                summary=parsed.get("summary", ""),
+                raw_resume_text=parsed.get("raw_text", "")[:10000],
+            )
+            db.add(candidate)
+
+        db.flush()
+
+        resume_record = Resume(
+            candidate_id=candidate.id,
+            filename=unique_filename,
+            file_type=ext,
+            file_size=len(content),
+            parsed_data=parsed,
+            status=result.get("status", "completed"),
+            processing_time_ms=result.get("metadata", {}).get("total_time_ms", 0),
+        )
+        db.add(resume_record)
+        db.commit()
+        candidate_id = candidate.id
+        logger.info(f"Saved candidate {parsed.get('name', 'Unknown')} with ID={candidate_id}")
+
+        # Index into vector store (non-blocking — failure doesn't affect response)
+        orchestrator.index_to_vector_store(candidate_id, parsed, result.get("normalized_skills", {}))
     except Exception as e:
-        logger.error(f"Error formulating parsed data: {e}")
-        # db.rollback()
+        logger.error(f"Error saving parsed data to DB: {e}")
+        db.rollback()
 
     return ResumeProcessingResult(
         status=result.get("status", "success"),
@@ -224,20 +238,41 @@ async def parse_batch(
         candidate_id = None
         try:
             parsed = item.get("parsed_data", {}) or {}
-            candidate = Candidate(
-                name=parsed.get("name", ""),
-                email=parsed.get("email", ""),
-                phone=parsed.get("phone", ""),
-                location=parsed.get("location", ""),
-                raw_resume_text=parsed.get("raw_text", "")[:10000],
+            email = parsed.get("email", "") or ""
+
+            # Upsert by email
+            candidate = db.query(Candidate).filter(Candidate.email == email).first() if email else None
+            if candidate:
+                candidate.name = parsed.get("name", candidate.name)
+                candidate.phone = parsed.get("phone", candidate.phone)
+                candidate.location = parsed.get("location", candidate.location)
+                candidate.raw_resume_text = parsed.get("raw_text", "")[:10000]
+            else:
+                candidate = Candidate(
+                    name=parsed.get("name", ""),
+                    email=email,
+                    phone=parsed.get("phone", ""),
+                    location=parsed.get("location", ""),
+                    raw_resume_text=parsed.get("raw_text", "")[:10000],
+                )
+                db.add(candidate)
+
+            db.flush()
+            unique_fn = unique_filenames_map.get(item.get("filename", ""), item.get("filename", ""))
+            resume_record = Resume(
+                candidate_id=candidate.id,
+                filename=unique_fn,
+                file_type=unique_fn.rsplit(".", 1)[-1].lower() if "." in unique_fn else "txt",
+                file_size=0,
+                parsed_data=parsed,
+                status=item.get("status", "completed"),
+                processing_time_ms=item.get("metadata", {}).get("total_time_ms", 0),
             )
-            # db.add(candidate)
-            # db.flush()
-            # candidate_id = candidate.id
-            candidate_id = None
-        except Exception:
-            # db.rollback()
-            pass
+            db.add(resume_record)
+            candidate_id = candidate.id
+        except Exception as e:
+            logger.error(f"Batch DB save error for {item.get('filename', '?')}: {e}")
+            db.rollback()
 
         results.append(ResumeProcessingResult(
             status=item.get("status", "success"),
@@ -249,10 +284,11 @@ async def parse_batch(
             metadata=item.get("metadata", {}),
         ))
 
-    # try:
-    #     db.commit()
-    # except Exception:
-    #     db.rollback()
+    try:
+        db.commit()
+    except Exception as e:
+        logger.error(f"Batch DB commit failed: {e}")
+        db.rollback()
 
     task_id = str(uuid.uuid4())
     return BatchProcessingResult(

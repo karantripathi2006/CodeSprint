@@ -53,6 +53,7 @@ export default function JobMatch() {
 
         return {
           candidateName: c.name,
+          email: c.email,
           role: jobTitle || c.role || "Candidate",
           score: c.score || scoreRandom,
           skills: {

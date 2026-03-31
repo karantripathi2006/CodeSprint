@@ -188,6 +188,55 @@ class SkillTaxonomyResponse(BaseModel):
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+#  JOB MODELS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class JobResponse(BaseModel):
+    """Response model for a saved job."""
+    id: int
+    title: str
+    company: str
+    description: str
+    required_skills: List[str] = []
+    optional_skills: List[str] = []
+    experience_min: float = 0
+    experience_max: float = 0
+    location: str = ""
+    job_type: str = ""
+
+    class Config:
+        from_attributes = True
+
+class JobListResponse(BaseModel):
+    jobs: List[JobResponse]
+    total: int
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  TASK STATUS MODELS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class TaskStatusResponse(BaseModel):
+    task_id: str
+    status: str  # pending, started, success, failure, unknown
+    result: Optional[Any] = None
+    error: Optional[str] = None
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  CHAT MODELS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class ChatMessage(BaseModel):
+    message: str = Field(..., description="User message to the AI assistant")
+    context: Optional[Dict[str, Any]] = Field(None, description="Optional context (candidate_id, job_id)")
+
+class ChatResponse(BaseModel):
+    reply: str
+    sources: List[str] = []
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 #  COMMON MODELS
 # ═══════════════════════════════════════════════════════════════════════════════
 

@@ -2,19 +2,42 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Brain, Lock, User } from 'lucide-react';
 import { useState } from 'react';
+import { setToken } from '../utils/api';
 
 export default function Login() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [username, setUsername] = useState('admin');
+  const [password, setPassword] = useState('password');
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // Simulate login
-    setTimeout(() => {
-      setLoading(false);
+    setError(null);
+
+    try {
+      // OAuth2 password flow — backend expects form-encoded body
+      const body = new URLSearchParams({ username, password });
+      const res = await fetch('/api/v1/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString(),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.detail || 'Invalid credentials');
+      }
+
+      const data = await res.json();
+      setToken(data.access_token);
       navigate('/');
-    }, 1000);
+    } catch (err: any) {
+      setError(err.message || 'Login failed');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -47,7 +70,8 @@ export default function Login() {
                 <input
                   type="text"
                   required
-                  defaultValue="admin"
+                  value={username}
+                  onChange={e => setUsername(e.target.value)}
                   className="block w-full pl-10 pr-3 py-3 border border-[#2a3050] rounded-xl leading-5 bg-[#0f1525] text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-colors"
                   placeholder="Username"
                 />
@@ -60,12 +84,19 @@ export default function Login() {
                 <input
                   type="password"
                   required
-                  defaultValue="password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
                   className="block w-full pl-10 pr-3 py-3 border border-[#2a3050] rounded-xl leading-5 bg-[#0f1525] text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-colors"
                   placeholder="Password"
                 />
               </div>
             </div>
+
+            {error && (
+              <p className="text-sm text-red-400 text-center bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+                {error}
+              </p>
+            )}
 
             <button
               type="submit"

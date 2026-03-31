@@ -1,43 +1,47 @@
-# FastAPI & Server
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
+# ── Core API ──────────────────────────────────────────────────────────────────
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
 python-multipart==0.0.6
 
-# Database
-sqlalchemy==2.0.23
-psycopg2-binary==2.9.9
-alembic==1.13.0
+# ── Database ──────────────────────────────────────────────────────────────────
+sqlalchemy>=2.0.36
 
-# Redis & Celery
-redis==5.0.1
-celery==5.3.6
+# ── Config & Utilities ────────────────────────────────────────────────────────
+pydantic>=2.9.0
+pydantic-settings>=2.5.0
+python-dotenv==1.0.0
+aiofiles==23.2.1
+slowapi==0.1.9
 
-# Vector Database
-chromadb==0.4.22
+# ── Auth (were missing — required by security_auth.py) ───────────────────────
+bcrypt==4.1.2
+PyJWT==2.8.0
 
-# ML & NLP
-sentence-transformers==2.2.2
-torch==2.1.2
-transformers==4.36.2
-
-# Resume Parsing
-PyMuPDF==1.23.8
+# ── Resume Parsing ────────────────────────────────────────────────────────────
+PyMuPDF>=1.24.0       # 1.24+ has pre-built wheels; 1.23.x requires building from source
 pdfplumber==0.10.3
 python-docx==1.1.0
 
-# LangChain
-langchain==0.0.350
-langchain-community==0.0.6
+# ── ML / Embeddings ───────────────────────────────────────────────────────────
+# Install CPU-only torch first to avoid 2GB CUDA download:
+#   pip install torch --index-url https://download.pytorch.org/whl/cpu
+# torch==2.1.2
+sentence-transformers>=2.7.0      # 2.7+ has Python 3.12/3.13 wheels
 
-# API Utilities
-slowapi==0.1.9
-pydantic==2.5.3
-pydantic-settings==2.1.0
-python-dotenv==1.0.0
+# ── LangChain + Vector Store ──────────────────────────────────────────────────
+langchain>=0.3.0
+langchain-community>=0.3.0
+# chromadb and langchain-chroma require pyarrow which has no Python 3.14 wheel yet.
+# Use Python 3.12 to enable these. The app falls back to hash-based in-memory search.
+# langchain-chroma>=0.1.4
+# chromadb>=0.5.0
 
-# Logging & Monitoring
-structlog==23.2.0
+# ── Document Parsing (Docling — richer PDF/DOCX extraction) ──────────────────
+docling>=2.0.0                  # IBM's document AI parser; requires: sudo dnf install libxml2-devel libxslt-devel
 
-# Utilities
-uuid6==2023.5.2
-aiofiles==23.2.1
+# ── Async Tasks (optional — app runs in sync mode without these) ───────────────
+redis==5.0.1
+celery==5.3.6
+
+# ── PostgreSQL (optional — SQLite is the default; only add if using Postgres) ──
+# psycopg2-binary==2.9.9   # Only needed when DATABASE_URL points to PostgreSQL (e.g. Docker)

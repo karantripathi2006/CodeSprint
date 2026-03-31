@@ -8,6 +8,7 @@ using sentence-transformer embeddings and weighted multi-factor scoring.
 import logging
 import re
 import time
+from datetime import datetime
 from typing import Dict, List, Any, Optional
 
 logger = logging.getLogger(__name__)
@@ -51,11 +52,11 @@ class SemanticMatcherAgent:
     """
 
     def __init__(self, skill_weight: float = 0.50, experience_weight: float = 0.30,
-                 education_weight: float = 0.20):
+                 semantic_weight: float = 0.20):
         """Initialize with configurable scoring weights."""
         self.skill_weight = skill_weight
         self.experience_weight = experience_weight
-        self.education_weight = education_weight  # Used for semantic/education score
+        self.semantic_weight = semantic_weight
 
     def match(self, candidate_profile: Dict[str, Any], job_description: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -89,7 +90,7 @@ class SemanticMatcherAgent:
         overall_score = round(
             (skill_result["score"] * self.skill_weight +
              experience_score * self.experience_weight +
-             semantic_score * self.education_weight) * 100,
+             semantic_score * self.semantic_weight) * 100,
             1
         )
         overall_score = max(0, min(100, overall_score))
@@ -228,7 +229,7 @@ class SemanticMatcherAgent:
             year_match = re.search(r"(\d{4})", duration_str)
             if year_match:
                 start_year = int(year_match.group(1))
-                return max(0.5, 2026 - start_year)  # Current year
+                return max(0.5, datetime.now().year - start_year)  # Current year
 
         return 0
 

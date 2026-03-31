@@ -10,12 +10,13 @@ services:
     container_name: resumatch-app
     ports:
       - "8000:8000"
+    env_file:
+      - .env
     environment:
+      # Override .env values that differ inside Docker networking
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/resumatch
       - REDIS_URL=redis://redis:6379/0
       - CHROMA_PERSIST_DIR=/app/chroma_data
-      - DEBUG=true
-      - API_KEY=dev-api-key-change-in-production
     volumes:
       - ./uploads:/app/uploads
       - ./chroma_data:/app/chroma_data
@@ -31,6 +32,8 @@ services:
     build: .
     container_name: resumatch-celery
     command: celery -A app.core.celery_app worker --loglevel=info --concurrency=2
+    env_file:
+      - .env
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/resumatch
       - REDIS_URL=redis://redis:6379/0

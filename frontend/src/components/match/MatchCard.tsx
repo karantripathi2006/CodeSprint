@@ -7,6 +7,7 @@ import { useCandidates } from '../../context/CandidateContext';
 
 interface MatchData {
   candidateName: string;
+  email?: string;
   role: string;
   score: number;
   skills: {
@@ -23,10 +24,30 @@ interface MatchData {
 
 export default function MatchCard({ match }: { match: MatchData }) {
   const [showAIInsights, setShowAIInsights] = useState(false);
+  const [showEmailPrompt, setShowEmailPrompt] = useState(false);
+  const [manualEmail, setManualEmail] = useState('');
   const { candidates } = useCandidates();
-  
+
   // Find original candidate to access CV if exists
   const candidate = candidates.find(c => c.name === match.candidateName);
+  const rawEmail = match.email || candidate?.email;
+  const candidateEmail = rawEmail && rawEmail !== 'No email' ? rawEmail : null;
+
+  const handleMailClick = () => {
+    if (candidateEmail) {
+      window.open(buildGmailUrl(match.candidateName, match.role, match.score, match.skills.matched, candidateEmail), '_blank');
+    } else {
+      setShowEmailPrompt(true);
+    }
+  };
+
+  const handleManualSend = () => {
+    const email = manualEmail.trim();
+    if (!email) return;
+    window.open(buildGmailUrl(match.candidateName, match.role, match.score, match.skills.matched, email), '_blank');
+    setShowEmailPrompt(false);
+    setManualEmail('');
+  };
 
   return (
     <motion.div
@@ -139,9 +160,10 @@ export default function MatchCard({ match }: { match: MatchData }) {
             >
               <Bot size={16} /> Ask AI
             </button>
-            <button 
-              className="flex justify-center items-center p-2 rounded-xl text-slate-400 bg-[#1a1f35] border border-[#2a3050] hover:text-white hover:bg-[#2a3050] transition-colors" 
-              title="Mail Candidate"
+            <button
+              onClick={handleMailClick}
+              title={candidateEmail ? `Email ${match.candidateName} (${candidateEmail})` : 'Enter email to contact candidate'}
+              className="flex justify-center items-center p-2 rounded-xl text-slate-400 bg-[#1a1f35] border border-[#2a3050] hover:text-indigo-400 hover:bg-indigo-500/10 hover:border-indigo-500/30 transition-colors"
             >
               <Mail size={16} />
             </button>
@@ -220,7 +242,7 @@ export default function MatchCard({ match }: { match: MatchData }) {
                  )}
 
                  <div className="mt-4 p-4 bg-indigo-500/10 rounded-xl border border-indigo-500/20">
-                    <p className="font-bold text-indigo-400 mb-2 flex flex-col gap-1">
+                    <p className="font-bold text-indigo-400 mb-2 flex items-center gap-1.5">
                       <SparklesIcon size={14} /> Suggested Interview Question
                     </p>
                     <p className="italic text-slate-300 text-sm">
@@ -234,14 +256,101 @@ export default function MatchCard({ match }: { match: MatchData }) {
         </AnimatePresence>,
         document.body
       )}
+
+      {/* Email Prompt Modal — shown when no email is on record */}
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {showEmailPrompt && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                onClick={() => setShowEmailPrompt(false)}
+                className="absolute inset-0 bg-[#0f1525]/80 backdrop-blur-sm"
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+                className="relative w-full max-w-sm bg-[#0f1525] border border-[#2a3050] rounded-2xl p-6 shadow-2xl z-10"
+              >
+                <button onClick={() => setShowEmailPrompt(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white p-2">
+                  <X size={18} />
+                </button>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/20 text-indigo-400">
+                    <Mail size={20} />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-semibold text-white">Email {match.candidateName}</h3>
+                    <p className="text-xs text-slate-400">No email found — enter one to continue</p>
+                  </div>
+                </div>
+                <input
+                  type="email"
+                  value={manualEmail}
+                  onChange={e => setManualEmail(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleManualSend()}
+                  placeholder="candidate@email.com"
+                  className="w-full bg-[#1a1f35] border border-[#2a3050] rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 mb-3"
+                  autoFocus
+                />
+                <button
+                  onClick={handleManualSend}
+                  disabled={!manualEmail.trim()}
+                  className="w-full py-2.5 rounded-xl text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  Open in Mail App
+                </button>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </motion.div>
   );
 }
 
+function buildGmailUrl(
+  name: string,
+  role: string,
+  score: number,
+  matchedSkills: string[],
+  email: string,
+): string {
+  const subject = encodeURIComponent(`Interview Opportunity — ${role} Position at LodekeEngineer`);
+
+  const skillsLine = matchedSkills.length > 0
+    ? `Your background in ${matchedSkills.slice(0, 3).join(', ')} caught our attention.`
+    : 'Your profile stood out to us.';
+
+  const body = encodeURIComponent(
+`Dear ${name},
+
+I hope this message finds you well.
+
+My name is Kuldeep and I am a Director at LodekeEngineer. We came across your profile and were impressed — your resume scored ${score}% compatibility with our ${role} opening.
+
+${skillsLine}
+
+We would love to schedule a brief call to discuss the opportunity in more detail. Please let me know your availability for a 30-minute conversation at your earliest convenience.
+
+Role: ${role}
+Match Score: ${score}%
+
+Looking forward to hearing from you.
+
+Best regards,
+Kuldeep
+Director | LodekeEngineer
++91 8600000010 | LodekeEngineer.com`
+  );
+
+  return `https://mail.google.com/mail/?view=cm&to=${encodeURIComponent(email)}&su=${subject}&body=${body}`;
+}
+
 // Inline sparse icon to avoid missing imports
-function SparklesIcon(props: any) {
+function SparklesIcon({ size = 16, className = '', ...rest }: { size?: number; className?: string; [key: string]: any }) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }} className={className} {...rest}>
       <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
       <path d="M5 3v4M3 5h4"/>
     </svg>

@@ -38,10 +38,15 @@ class ResumeParserAgent:
     LINKEDIN_PATTERN = re.compile(r"(?:linkedin\.com/in/|linkedin:\s*)([\w-]+)", re.IGNORECASE)
 
     # ── Experience Duration Patterns ─────────────────────────────────────
+    # Matches "Jan 2020 – Dec 2022" or "Jan 2020 – Present"
     DATE_RANGE_PATTERN = re.compile(
         r"((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s*\d{4})\s*[-–—to]+\s*"
         r"((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s*\d{4}|[Pp]resent|[Cc]urrent)",
         re.IGNORECASE,
+    )
+    # Matches "2020 – 2023" or "2020 – Present"
+    YEAR_RANGE_PATTERN = re.compile(
+        r"\b(20\d{2}|19\d{2})\s*[-–—to]+\s*(20\d{2}|19\d{2}|[Pp]resent|[Cc]urrent)\b"
     )
 
     YEAR_PATTERN = re.compile(r"\b(20\d{2}|19\d{2})\b")
@@ -126,30 +131,78 @@ class ResumeParserAgent:
             logger.error(f"Error extracting text from .{ext} file: {e}")
             return ""
 
+    def _extract_with_docling(self, content: bytes, ext: str) -> str:
+        """
+        Primary extraction using Docling (IBM) — handles complex layouts,
+        tables, and multi-column PDFs much better than rule-based parsers.
+        Returns empty string if Docling is not installed or fails.
+        """
+        try:
+            import tempfile, os
+            from docling.document_converter import DocumentConverter
+
+            suffix = f".{ext}"
+            with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
+                tmp.write(content)
+                tmp_path = tmp.name
+
+            converter = DocumentConverter()
+            result = converter.convert(tmp_path)
+            os.unlink(tmp_path)
+
+            # Export to markdown — preserves section structure better than plain text
+            text = result.document.export_to_markdown()
+            logger.info(f"Docling extracted {len(text)} chars from .{ext} file")
+            return text
+        except ImportError:
+            logger.debug("Docling not installed; using PyMuPDF/pdfplumber fallback")
+            return ""
+        except Exception as e:
+            logger.warning(f"Docling failed: {e}; using fallback")
+            return ""
+
     def _extract_pdf_text(self, content: bytes) -> str:
-        """Extract text from PDF using PyMuPDF (fitz) with pdfplumber fallback."""
-        text = ""
+        """Extract text from PDF: Docling → PyMuPDF → pdfplumber."""
+        # Try Docling first (best quality for complex layouts)
+        text = self._extract_with_docling(content, "pdf")
+        if text and len(text.strip()) > 100:
+            return text
+
+        # Fallback: PyMuPDF
         try:
             import fitz  # PyMuPDF
             doc = fitz.open(stream=content, filetype="pdf")
+            text = ""
             for page in doc:
                 text += page.get_text("text") + "\n"
             doc.close()
+            if text.strip():
+                return text
         except Exception as e:
             logger.warning(f"PyMuPDF failed: {e}, trying pdfplumber")
-            try:
-                import pdfplumber
-                with pdfplumber.open(io.BytesIO(content)) as pdf:
-                    for page in pdf.pages:
-                        page_text = page.extract_text()
-                        if page_text:
-                            text += page_text + "\n"
-            except Exception as e2:
-                logger.error(f"pdfplumber also failed: {e2}")
+
+        # Fallback: pdfplumber
+        try:
+            import pdfplumber
+            text = ""
+            with pdfplumber.open(io.BytesIO(content)) as pdf:
+                for page in pdf.pages:
+                    page_text = page.extract_text()
+                    if page_text:
+                        text += page_text + "\n"
+        except Exception as e:
+            logger.error(f"pdfplumber also failed: {e}")
+
         return text
 
     def _extract_docx_text(self, content: bytes) -> str:
-        """Extract text from DOCX using python-docx."""
+        """Extract text from DOCX: Docling → python-docx."""
+        # Try Docling first
+        text = self._extract_with_docling(content, "docx")
+        if text and len(text.strip()) > 50:
+            return text
+
+        # Fallback: python-docx
         try:
             from docx import Document
             doc = Document(io.BytesIO(content))
@@ -210,20 +263,46 @@ class ResumeParserAgent:
     # ═══════════════════════════════════════════════════════════════════════
 
     def _extract_name(self, text: str) -> str:
-        """Extract candidate name (usually the first non-empty meaningful line)."""
+        """Extract candidate name from resume text."""
+        # Strategy 1: explicit label anywhere near the top
+        label_match = re.search(r"(?:^|\n)\s*(?:name|full\s*name)\s*[:\-]\s*([A-Za-z][A-Za-z\s\.\-']{1,40})", text[:2000], re.IGNORECASE)
+        if label_match:
+            return label_match.group(1).strip().title()
+
         lines = text.strip().split("\n")
-        for line in lines[:5]:  # Check first 5 lines
+        candidates = []
+
+        for line in lines[:10]:  # Scan first 10 lines
             cleaned = line.strip()
             if not cleaned or len(cleaned) < 2:
                 continue
-            # Skip lines that look like contact info
+            # Skip contact info lines
             if self.EMAIL_PATTERN.search(cleaned) or self.PHONE_PATTERN.search(cleaned):
                 continue
-            if "http" in cleaned.lower() or "linkedin" in cleaned.lower():
+            if re.search(r"http|linkedin|github|twitter|@|www\.", cleaned, re.IGNORECASE):
                 continue
-            # Name lines are typically short and contain mainly letters
-            if len(cleaned) < 50 and re.match(r"^[A-Za-z\s\.\-']+$", cleaned):
-                return cleaned.title()
+            # Skip lines that are obviously not names (addresses, titles, dates)
+            if re.search(r"\d{4}|street|avenue|road|#|\||/", cleaned, re.IGNORECASE):
+                continue
+            # Skip single-word all-caps lines that look like section headers
+            if cleaned.isupper() and len(cleaned.split()) == 1 and len(cleaned) > 6:
+                continue
+
+            # Accept lines that are mostly alphabetic (≥70% alpha+space chars)
+            alpha_ratio = sum(1 for c in cleaned if c.isalpha() or c == ' ') / max(len(cleaned), 1)
+            if alpha_ratio >= 0.70 and 2 <= len(cleaned) <= 50:
+                candidates.append(cleaned)
+
+        # Strategy 2: prefer the first candidate that looks like 2–4 words (a real full name)
+        for c in candidates:
+            words = c.split()
+            if 2 <= len(words) <= 4 and all(len(w) >= 2 for w in words):
+                return c.title()
+
+        # Strategy 3: fall back to any candidate found
+        if candidates:
+            return candidates[0].title()
+
         return ""
 
     def _extract_email(self, text: str) -> str:
@@ -343,7 +422,7 @@ class ResumeParserAgent:
                 continue
 
             # Check for date ranges (indicator of a new experience entry)
-            date_match = self.DATE_RANGE_PATTERN.search(stripped)
+            date_match = self.DATE_RANGE_PATTERN.search(stripped) or self.YEAR_RANGE_PATTERN.search(stripped)
             if date_match:
                 if current_exp:
                     current_exp["responsibilities"] = responsibilities
@@ -387,25 +466,42 @@ class ResumeParserAgent:
         """Extract skills from skills section and full text."""
         skills = set()
 
+        # Tracks canonical lowercase versions already added to avoid case duplicates
+        seen_lower: set = set()
+
+        def _add_skill(s: str):
+            s = s.strip().strip("•-●▪*→ ").strip()
+            if not s or not (1 < len(s) < 50):
+                return
+            # Strip proficiency/level suffixes: "Python: Advanced", "Python (3 yrs)", "Python - Expert"
+            s = re.sub(
+                r'\s*[(:]\s*(?:expert|advanced|senior|intermediate|proficient|familiar|beginner|basic|'
+                r'learning|exposure|\d+\+?\s*(?:years?|yrs?|months?))[^,;|•]*$',
+                '', s, flags=re.IGNORECASE
+            ).strip()
+            # Strip trailing parenthetical: "React.js (v18)", "Python (3.9)"
+            s = re.sub(r'\s*\([^)]{1,30}\)\s*$', '', s).strip()
+            if s and s.lower() not in seen_lower:
+                seen_lower.add(s.lower())
+                skills.add(s)
+
         # Extract from skills section
         if section_text.strip():
-            # Split by common delimiters
             for line in section_text.split("\n"):
                 line = line.strip()
                 if not line:
                     continue
-                # Remove section-like headers within skills
+                # Skip pure sub-header lines like "Programming Languages:" with nothing after
                 if re.match(r"^(Technical|Soft|Programming|Languages?|Frameworks?|Tools?|Databases?)\s*:?\s*$",
-                           line, re.IGNORECASE):
+                            line, re.IGNORECASE):
                     continue
+                # If line has "Category: skill1, skill2" format, drop category prefix first
+                colon_split = re.match(r"^[\w\s&/]+:\s*(.+)$", line)
+                if colon_split:
+                    line = colon_split.group(1)
                 # Split by comma, pipe, bullet, semicolon
-                parts = re.split(r"[,|;•●▪]\s*", line)
-                for part in parts:
-                    clean = part.strip().strip("•-●▪*→ ").strip()
-                    # Remove category prefixes like "Programming Languages:"
-                    clean = re.sub(r"^[\w\s]+:\s*", "", clean)
-                    if clean and 1 < len(clean) < 50:
-                        skills.add(clean)
+                for part in re.split(r"[,|;•●▪]\s*", line):
+                    _add_skill(part)
 
         # Also scan full text for common technology keywords
         tech_keywords = [
@@ -426,9 +522,10 @@ class ResumeParserAgent:
 
         for kw in tech_keywords:
             if re.search(r"\b" + kw + r"\b", full_text, re.IGNORECASE):
-                # Use the proper casing from our keyword list
                 clean_kw = kw.replace("\\+", "+").replace("\\.", ".")
-                skills.add(clean_kw)
+                if clean_kw.lower() not in seen_lower:
+                    seen_lower.add(clean_kw.lower())
+                    skills.add(clean_kw)
 
         return sorted(list(skills))
 
