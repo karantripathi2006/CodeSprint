@@ -20,7 +20,7 @@ PyJWT==2.8.0
 # ── Resume Parsing ────────────────────────────────────────────────────────────
 PyMuPDF>=1.24.0       # 1.24+ has pre-built wheels; 1.23.x requires building from source
 pdfplumber==0.10.3
-python-docx==1.1.0
+python-docx>=1.1.0
 
 # ── ML / Embeddings ───────────────────────────────────────────────────────────
 # Install CPU-only torch first to avoid 2GB CUDA download:
@@ -37,11 +37,11 @@ langchain-community>=0.3.0
 # chromadb>=0.5.0
 
 # ── Document Parsing (Docling — richer PDF/DOCX extraction) ──────────────────
-docling>=2.0.0                  # IBM's document AI parser; requires: sudo dnf install libxml2-devel libxslt-devel
+# docling>=2.0.0                # IBM's document AI parser; requires libxml2-dev libxslt1-dev — app falls back to PyMuPDF/pdfplumber without it
 
 # ── Async Tasks (optional — app runs in sync mode without these) ───────────────
 redis==5.0.1
 celery==5.3.6
 
 # ── PostgreSQL (optional — SQLite is the default; only add if using Postgres) ──
-# psycopg2-binary==2.9.9   # Only needed when DATABASE_URL points to PostgreSQL (e.g. Docker)
+psycopg2-binary>=2.9.9          # Required: docker-compose sets DATABASE_URL to PostgreSQL

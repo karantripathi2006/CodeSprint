@@ -1,4 +1,4 @@
-# 🧠 ResuMatch AI
+# ResuMatch AI
 
 **Multi-Agent AI System for Intelligent Resume Parsing, Skill Normalization, and Semantic Job Matching**
 
@@ -6,7 +6,7 @@ Built for DA-IICT Hackathon 2026
 
 ---
 
-## 🏗 Architecture
+## Architecture
 
 ```
 ┌──────────────────────────────────────────────────────────┐
@@ -16,7 +16,7 @@ Built for DA-IICT Hackathon 2026
 │                  Agent Orchestrator                       │
 │         (retry logic, batch, error handling)              │
 ├────────────┬──────────────────┬──────────────────────────┤
-│  📄 Resume │  🔧 Skill        │  🎯 Semantic             │
+│  Resume    │  Skill           │  Semantic                │
 │  Parser    │  Normalizer      │  Matcher                 │
 │  Agent     │  Agent           │  Agent                   │
 ├────────────┴──────────────────┴──────────────────────────┤
@@ -28,72 +28,87 @@ Built for DA-IICT Hackathon 2026
 
 ---
 
-## 🚀 Quick Start (Local — No Docker)
+## Quick Start (Local)
 
-### 1. Install Dependencies
+### Prerequisites
 
-```bash
-cd "DA IICT HACKATHON"
-pip install -r requirements.txt
-```
+- Python 3.11+
+- Node.js 20+
+- [uv](https://docs.astral.sh/uv/getting-started/installation/) — `pip install uv` or `winget install astral-sh.uv`
 
-> **Note:** On first run, the `sentence-transformers` model (~80MB) will be downloaded automatically.
-
-### 2. Initialize Database
+### 1. Backend
 
 ```bash
-python init_db.py
+uv sync                                      # creates .venv, installs all deps
+python init_db.py                            # create SQLite DB + seed skill taxonomy
+uv run uvicorn app.main:app --reload         # starts on http://localhost:8000
 ```
 
-This creates SQLite database and seeds the skill taxonomy + sample jobs.
+> On first run, `sentence-transformers` downloads the embedding model (~80 MB).
 
-### 3. Run the Server
+### 2. Frontend
 
 ```bash
-uvicorn app.main:app --reload --port 8000
+cd frontend
+npm install
+npm run dev                                  # starts on http://localhost:5173
 ```
 
-### 4. Access the App
+The Vite dev server proxies `/api/*` to `http://localhost:8000` automatically.
+
+### Useful URLs
 
 | URL | Description |
 |-----|-------------|
-| http://localhost:8000/docs | 📖 Swagger API Docs |
-| http://localhost:8000/redoc | 📘 ReDoc API Docs |
-| http://localhost:8000/frontend/index.html | 🎨 Frontend Dashboard |
-| http://localhost:8000/health | ❤️ Health Check |
+| http://localhost:5173 | Frontend dashboard |
+| http://localhost:8000/docs | Swagger API docs |
+| http://localhost:8000/redoc | ReDoc API docs |
+| http://localhost:8000/health | Health check |
 
 ---
 
-## 🐳 Docker Setup (Full Stack)
+## Docker (Full Stack)
+
+Runs FastAPI + PostgreSQL + Redis together.
 
 ```bash
-docker-compose up --build
+uv lock                        # generate lockfile if not committed yet
+docker compose up --build
 ```
 
-This starts: FastAPI app, PostgreSQL, Redis, and Celery worker.
+| Service | Port |
+|---------|------|
+| FastAPI app | 8000 |
+| PostgreSQL | 5432 |
+| Redis | 6379 |
 
 ---
 
-## 📡 API Endpoints
+## Configuration
 
-### Parse Resume
+Copy `.env.example` to `.env` and adjust as needed.
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `DATABASE_URL` | `sqlite:///./resumatch.db` | DB connection (SQLite locally, Postgres in Docker) |
+| `REDIS_URL` | `redis://localhost:6379/0` | Redis for async task queue |
+| `EMBEDDING_MODEL` | `all-MiniLM-L6-v2` | Sentence transformer model |
+| `SKILL_WEIGHT` | `0.50` | Weight for skill score |
+| `EXPERIENCE_WEIGHT` | `0.30` | Weight for experience score |
+| `API_KEY` | `dev-api-key-...` | API authentication key |
+| `DEBUG` | `true` | Bypasses auth in dev mode |
+
+---
+
+## API Reference
+
+### Parse a resume
 ```bash
-# Single resume
 curl -X POST http://localhost:8000/api/v1/parse \
-  -F "file=@data/sample_resumes/resume_1.txt"
-
-# Batch processing
-curl -X POST http://localhost:8000/api/v1/parse/batch \
-  -F "files=@data/sample_resumes/resume_1.txt" \
-  -F "files=@data/sample_resumes/resume_2.txt"
+  -F "file=@resume.pdf"
 ```
 
-### Get Candidate Skills
-```bash
-curl http://localhost:8000/api/v1/candidates/1/skills
-```
-
-### Match Candidate with Job
+### Match candidate to job
 ```bash
 curl -X POST http://localhost:8000/api/v1/match \
   -H "Content-Type: application/json" \
@@ -109,40 +124,41 @@ curl -X POST http://localhost:8000/api/v1/match \
   }'
 ```
 
-### Get Skill Taxonomy
+### Get candidate skills
 ```bash
-curl http://localhost:8000/api/v1/skills/taxonomy
+curl http://localhost:8000/api/v1/candidates/1/skills
 ```
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```
-DA IICT HACKATHON/
+.
 ├── app/
 │   ├── main.py               # FastAPI entry point
-│   ├── core/                  # Configuration, DB, security
-│   ├── models/                # SQLAlchemy models (6 tables)
-│   ├── agents/                # AI agents (parser, normalizer, matcher, orchestrator)
-│   ├── services/              # Embedding & vector store services
-│   ├── tasks/                 # Celery async tasks
-│   └── api/v1/                # REST API endpoints + schemas
-├── data/                      # Taxonomy, sample resumes & jobs
-├── frontend/                  # Web dashboard (HTML/CSS/JS)
-├── requirements.txt
+│   ├── core/                 # Config, database, security
+│   ├── models/               # SQLAlchemy models
+│   ├── agents/               # Resume parser, skill normalizer, semantic matcher, orchestrator
+│   ├── services/             # Embedding & vector store
+│   ├── tasks/                # Celery async tasks
+│   └── api/v1/               # REST endpoints + Pydantic schemas
+├── frontend/                 # React + Vite dashboard (see frontend/README.md)
+├── pyproject.toml            # Python project & deps (managed by uv)
+├── uv.lock                   # Locked dependency versions
+├── requirements.txt          # Used by Docker pip fallback
 ├── Dockerfile
 ├── docker-compose.yml
-├── init_db.py
-└── README.md
+├── init_db.py                # DB init + seed script
+└── .env                      # Local environment variables (not committed)
 ```
 
 ---
 
-## 🤖 Agent Details
+## Agents
 
-| Agent | Purpose | Key Tech |
-|-------|---------|----------|
+| Agent | Purpose | Key Libraries |
+|-------|---------|---------------|
 | **Resume Parser** | Extract structured data from PDF/DOCX/TXT | PyMuPDF, pdfplumber, python-docx |
 | **Skill Normalizer** | Map skills to taxonomy, resolve synonyms | Custom taxonomy, fuzzy matching |
 | **Semantic Matcher** | Score candidates against jobs | sentence-transformers, cosine similarity |
@@ -150,72 +166,6 @@ DA IICT HACKATHON/
 
 ---
 
-## ⚙️ Configuration
-
-All settings in `.env`:
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `DATABASE_URL` | `sqlite:///./resumatch.db` | Database connection |
-| `REDIS_URL` | `redis://localhost:6379/0` | Redis for queues |
-| `EMBEDDING_MODEL` | `all-MiniLM-L6-v2` | Sentence transformer model |
-| `SKILL_WEIGHT` | `0.50` | Weight for skill scoring |
-| `EXPERIENCE_WEIGHT` | `0.30` | Weight for experience scoring |
-| `API_KEY` | `dev-api-key-...` | API authentication key |
-| `DEBUG` | `true` | Debug mode (bypasses auth) |
-
----
-
-## 📊 Example Response
-
-### Parse Result
-```json
-{
-  "status": "success",
-  "candidate_id": 1,
-  "parsed_data": {
-    "name": "John Doe",
-    "email": "john@example.com",
-    "phone": "+1-555-123-4567",
-    "skills": ["Python", "FastAPI", "React", "Docker"],
-    "experience": [
-      {
-        "role": "Senior Software Engineer",
-        "company": "TechCorp Inc.",
-        "duration": "January 2022 - Present"
-      }
-    ]
-  },
-  "normalized_skills": {
-    "normalized_skills": ["Python", "FastAPI", "React", "Docker"],
-    "inferred_skills": ["Web Frameworks", "Deep Learning"],
-    "proficiency_map": { "Python": 0.85, "React": 0.7 }
-  }
-}
-```
-
-### Match Result
-```json
-{
-  "overall_score": 78.5,
-  "skill_score": 85.0,
-  "experience_score": 70.0,
-  "semantic_score": 72.3,
-  "matching_skills": ["Python", "FastAPI", "PostgreSQL"],
-  "missing_skills": ["Kubernetes"],
-  "explanation": "✅ Good match (78.5%)...",
-  "recommendations": [
-    {
-      "skill": "Kubernetes",
-      "priority": "high",
-      "suggestion": "Learn Kubernetes — required skill for the role."
-    }
-  ]
-}
-```
-
----
-
-## 👥 Team
+## Team
 
 Built for DA-IICT Hackathon 2026

@@ -1,0 +1,62 @@
+[project]
+name = "resumatch-ai"
+version = "0.1.0"
+description = "Multi-Agent AI System for Intelligent Resume Parsing, Skill Normalization, and Semantic Job Matching"
+requires-python = ">=3.11"
+dependencies = [
+    # Core API
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "python-multipart==0.0.6",
+    # Database
+    "sqlalchemy>=2.0.36",
+    # Config & Utilities
+    "pydantic>=2.9.0",
+    "pydantic-settings>=2.5.0",
+    "python-dotenv==1.0.0",
+    "aiofiles==23.2.1",
+    "slowapi==0.1.9",
+    # Auth
+    "bcrypt==4.1.2",
+    "PyJWT==2.8.0",
+    # Resume Parsing
+    "PyMuPDF>=1.24.0",
+    "pdfplumber==0.10.3",
+    "python-docx>=1.1.0",
+    # ML / Embeddings
+    "sentence-transformers>=2.7.0",
+    # LangChain + Vector Store
+    "langchain>=0.3.0",
+    "langchain-community>=0.3.0",
+    # Async Tasks
+    "redis==5.0.1",
+    "celery==5.3.6",
+]
+
+[project.optional-dependencies]
+# PostgreSQL driver — only needed when DATABASE_URL points to Postgres (e.g. Docker/prod)
+# Not required locally; app defaults to SQLite
+postgres = ["psycopg2-binary>=2.9.9"]
+# Richer PDF/DOCX extraction — requires libxml2-dev and libxslt1-dev system libs
+docling = ["docling>=2.0.0"]
+# ChromaDB vector store — requires Python <=3.13 (no pyarrow wheel for 3.14+)
+chroma = ["chromadb>=0.5.0", "langchain-chroma>=0.1.4"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+# CPU-only torch — avoids the 2 GB CUDA download
+index-url = "https://pypi.org/simple"
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
